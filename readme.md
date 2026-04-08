@@ -106,14 +106,29 @@ The bottom status area provides real-time updates:
 
 ### Prerequisites
 - **Compiler**: GCC 9+, Clang 10+, or MSVC 2019+.
-- **Libraries**: wxWidgets 3.2, FFmpeg (libavcodec, libavformat, libswresample).
-- **Build System**: CMake 3.15+.
+- **Libraries**: wxWidgets 3.2, ALSA/PulseAudio development headers.
+- **Build System**: CMake 3.16+.
 
 ### Build Instructions
+
+#### Linux (including ARM)
+You can use the provided build script:
+```bash
+chmod +x build-linux-arm.sh
+./build-linux-arm.sh
+```
+
+Or build manually:
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
+```
+
+#### macOS
+```bash
+chmod +x build-mac.sh
+./build-mac.sh
 ```
 
 ---

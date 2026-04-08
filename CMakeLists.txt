@@ -37,4 +37,6 @@ target_link_libraries(loudness-leveler PRIVATE ${wxWidgets_LIBRARIES})
 
 if(APPLE)
     target_link_libraries(loudness-leveler PRIVATE "-framework CoreAudio" "-framework AudioUnit" "-framework CoreFoundation" "-framework AudioToolbox")
+elseif(UNIX AND NOT APPLE)
+    target_link_libraries(loudness-leveler PRIVATE dl m pthread)
 endif()
