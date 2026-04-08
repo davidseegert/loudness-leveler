@@ -1,0 +1,11 @@
+build/
+.DS_Store
+*.user
+.vscode/
+.idea/
+._*
+*.mp3
+*.wav
+task.md
+todo.md
+notes.md

@@ -1,0 +1,19 @@
+Configuring project...
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Volumes/KINGSTON/dev/loudness-leveler/build
+Building project...
+[ 71%] Building CXX object CMakeFiles/loudness-leveler.dir/main.cpp.o
+[ 71%] Building CXX object CMakeFiles/loudness-leveler.dir/MainWindow.cpp.o
+[100%] Linking CXX executable loudness-leveler
+ld: warning: ignoring duplicate libraries: '-lwx_baseu-3.3', '-lwx_osx_cocoau_core-3.3'
+Undefined symbols for architecture arm64:
+  "AudioProcessor::setPostCompAmount(float)", referenced from:
+      MainWindow::OnCompScroll(wxScrollEvent&) in MainWindow.cpp.o
+      MainWindow::OnCompSpin(wxSpinDoubleEvent&) in MainWindow.cpp.o
+      MainWindow::resetSettings() in MainWindow.cpp.o
+ld: symbol(s) not found for architecture arm64
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+make[2]: *** [loudness-leveler] Error 1
+make[1]: *** [CMakeFiles/loudness-leveler.dir/all] Error 2
+make: *** [all] Error 2
