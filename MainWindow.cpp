@@ -8,6 +8,8 @@
 #include <wx/fileconf.h>
 #include <wx/stdpaths.h>
 #include <wx/filename.h>
+#include <wx/aboutdlg.h>
+#include "version.h"
 
 class FileDropTarget : public wxFileDropTarget {
 public:
@@ -316,6 +318,10 @@ void MainWindow::setupUi() {
     settingsMenu->AppendCheckItem(ID_TOGGLE_ADVANCED, "Show &Advanced Options\tCtrl+Shift+A");
     menuBar->Append(settingsMenu, "&Settings");
 
+    wxMenu* helpMenu = new wxMenu();
+    helpMenu->Append(ID_ABOUT, "&About...\tF1");
+    menuBar->Append(helpMenu, "&Help");
+
     SetMenuBar(menuBar);
 
     // Bind Menu Events
@@ -326,6 +332,7 @@ void MainWindow::setupUi() {
     Bind(wxEVT_MENU, &MainWindow::OnSaveSettings, this, ID_SAVE_SETTINGS);
     Bind(wxEVT_MENU, &MainWindow::OnRestoreDefaults, this, ID_RESTORE_DEFAULTS);
     Bind(wxEVT_MENU, &MainWindow::OnToggleAdvanced, this, ID_TOGGLE_ADVANCED);
+    Bind(wxEVT_MENU, &MainWindow::OnAbout, this, ID_ABOUT);
 
     wxPanel* panel = new wxPanel(this);
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -1298,6 +1305,22 @@ void MainWindow::OnRestoreDefaults(wxCommandEvent& WXUNUSED(event)) {
 
 void MainWindow::OnExit(wxCommandEvent& WXUNUSED(event)) {
     Close(true);
+}
+
+void MainWindow::OnAbout(wxCommandEvent& event) {
+    wxAboutDialogInfo info;
+    info.SetName(APP_NAME);
+    info.SetVersion(APP_VERSION_STR);
+    info.SetCopyright(APP_COPYRIGHT);
+    
+    wxString desc;
+    desc << "Author: " << APP_AUTHOR << "\n"
+         << "License: " << APP_LICENSE;
+    info.SetDescription(desc);
+
+    info.SetWebSite(APP_WEBSITE);
+
+    wxAboutBox(info);
 }
 
 void MainWindow::updateEffectsUIState(bool enabled) {

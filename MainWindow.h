@@ -59,6 +59,7 @@ private:
     void OnLoadSettings(wxCommandEvent& event);
     void OnSaveSettings(wxCommandEvent& event);
     void OnRestoreDefaults(wxCommandEvent& event);
+    void OnAbout(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
     void OnToggleAdvanced(wxCommandEvent& event);
     void syncAdvancedModeUI();
@@ -219,6 +220,7 @@ private:
         ID_GAIN_VIEW_GATE,
         ID_GAIN_VIEW_RIDER,
         ID_GAIN_VIEW_COMP,
-        ID_GAIN_VIEW_LIMITER
+        ID_GAIN_VIEW_LIMITER,
+        ID_ABOUT
     };
 };
