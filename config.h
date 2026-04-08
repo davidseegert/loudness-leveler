@@ -4,7 +4,7 @@
  
  // Filter Settings
 namespace Filter {
-    constexpr float LowCutFreq = 80.0f;
+    constexpr float LowCutFreq = 100.0f;
     constexpr float HighCutFreq = 20000.0f;
     constexpr float MidCutFreq = 1000.0f;
     constexpr float MidCutGainDb = -5.0f;

@@ -23,7 +23,7 @@ namespace Labels {
 
     // Equalizer / Filter
     inline const char* Equalizer = "Equalizer";
-    inline const char* LowCut = "Low Cut 80Hz";
+    inline const char* LowCut = "Low Cut 100Hz";
     inline const char* MidCut = "Mid Cut 1kHz -5dB";
     inline const char* HighCut = "High Cut 20kHz";
     inline const char* PhaseRotate = "Phase Rotate";
