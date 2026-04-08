@@ -396,27 +396,25 @@ void WaveformWidget::updateCache() {
                 framePeak *= compGain;
             }
 
-            // 5. Manual Gain
-            if (effects) {
-                for (int c = 0; c < 2; ++c) frameVals[c] *= manualGainMultiplier;
-                framePeak *= manualGainMultiplier;
-            }
-
-            // 6. Limiter
+            // 5. Limiter (Calculated on un-boosted signal)
             float limiterGain = 1.0f;
             if (effects) {
                 for (int c = 0; c < 2; ++c) {
                     float s = frameVals[c];
-                    float clamped = (s < -limThreshold) ? -limThreshold : (s > limThreshold ? limThreshold : s);
                     if (m_limiterEnabled) {
                         if (std::abs(s) > limThreshold) {
                             float reduction = limThreshold / (std::abs(s) + 1e-9f);
                             limiterGain = std::min(limiterGain, reduction);
                         }
                     }
-                    if (m_limiterEnabled) frameVals[c] = clamped;
                 }
                 if (m_limiterEnabled && m_gainViewMode == GainViewMode::Limiter) pixelGainSolo = limiterGain;
+                
+                // Apply limiter gain and then manual gain
+                float currentLimGain = m_limiterEnabled ? limiterGain : 1.0f;
+                for (int c = 0; c < 2; ++c) {
+                    frameVals[c] *= currentLimGain * manualGainMultiplier;
+                }
                 framePeak = 0.0f;
                 for (int c = 0; c < 2; ++c) framePeak = std::max(framePeak, std::abs(frameVals[c]));
             }

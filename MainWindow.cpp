@@ -648,7 +648,7 @@ void MainWindow::setupUi() {
     m_compressorActiveCheckbox->Bind(wxEVT_CHECKBOX, &MainWindow::OnCompressorActiveToggled, this);
     compGroupSizer->Add(m_compressorActiveCheckbox, 0, wxALL, 2);
 
-    m_compAmountGroup = new ControlGroup(m_scrolledSettings, compGroupSizer, "Amount", ConfigAdvanced::Ranges::CompThresholdMin, 1.0f, m_currentComp, 0.05f, 2, 100.0f); // Amount is actually threshold for this specific simplified slider
+    m_compAmountGroup = new ControlGroup(m_scrolledSettings, compGroupSizer, "Amount", 0.0f, 1.0f, m_currentComp, 0.01f, 2, 100.0f);
     m_compAmountGroup->OnValueChange = [this](float v) {
         m_currentComp = v;
         m_processor.setPostCompAmount(v);

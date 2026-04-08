@@ -330,11 +330,10 @@ void AudioPlayerDevice::dataCallback(void* pOutput, const void* pInput, ma_uint3
         }
 
         for (int c = 0; c < m_channels && c < 2; ++c) {
-            frame[c] *= limiterGainSlider;
             float delayed = m_limiterDelayBuffer[m_limiterDelayWriteIdx + c];
             m_limiterDelayBuffer[m_limiterDelayWriteIdx + c] = frame[c];
             float currentLimGain = limEnabled ? m_limiterGain : 1.0f;
-            float finalVal = delayed * currentLimGain;
+            float finalVal = delayed * currentLimGain * limiterGainSlider;
             out[f * m_channels + c] = (finalVal < -1.0f) ? -1.0f : (finalVal > 1.0f ? 1.0f : finalVal);
         }
         m_limiterDelayWriteIdx = (m_limiterDelayWriteIdx + m_channels) % m_limiterDelayBuffer.size();

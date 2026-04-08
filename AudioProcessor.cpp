@@ -381,9 +381,7 @@ void AudioProcessor::processBlock(const float* input, float* output, size_t numF
             }
 
 
-            // Manual Gain (consistent with playback/widget)
             float manualGain = std::pow(10.0f, m_limiterGainDb / 20.0f);
-            for (int c = 0; c < m_channels; ++c) leveledSamples[c] *= manualGain;
 
             // Limiter Logic
             {
@@ -438,7 +436,7 @@ void AudioProcessor::processBlock(const float* input, float* output, size_t numF
                 for (int c = 0; c < m_channels; ++c) {
                     float delayed = state.limiterDelayBuffer[state.limiterDelayWriteIdx + c];
                     state.limiterDelayBuffer[state.limiterDelayWriteIdx + c] = leveledSamples[c];
-                    float outVal = delayed * currentLimGain;
+                    float outVal = delayed * currentLimGain * manualGain;
                     // Final safety brickwall clamp to prevents TP: 7.1 overshoots
                     output[f * m_channels + c] = (outVal < -1.0f) ? -1.0f : (outVal > 1.0f ? 1.0f : outVal);
                 }
