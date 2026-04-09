@@ -7,9 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Optimization flags for Release mode
 if(MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2 /Oi /Ot /Gy")
+    add_compile_definitions(_USE_MATH_DEFINES NOMINMAX)
 else()
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -march=native")
 endif()
+
+# wxWidgets configuration
+# Reverted to dynamic build per request
 
 # Find wxWidgets
 find_package(wxWidgets REQUIRED COMPONENTS core base adv)
@@ -31,7 +35,11 @@ set(SOURCES
     LufsAnalyzer.cpp
 )
 
-add_executable(loudness-leveler ${SOURCES})
+if(WIN32)
+    list(APPEND SOURCES icon.rc)
+endif()
+
+add_executable(loudness-leveler WIN32 ${SOURCES})
 
 target_link_libraries(loudness-leveler PRIVATE ${wxWidgets_LIBRARIES})
 
