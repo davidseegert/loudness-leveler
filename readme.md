@@ -1,21 +1,20 @@
 # Loudness Leveler
 
-**A lightweight C++ audio post-production tool for automated loudness leveling, dynamic range control, and industry-standard LUFS analysis.**
+**A C++ audio tool for automated loudness leveling, dynamic range control, and LUFS analysis.**
 
-Loudness Leveler is a high-performance desktop application designed for creators who need broadcast-quality vocal consistency without the "squashed" sound of traditional heavy compression. Optimized for podcasts, interviews, and voiceovers, it combines an intelligent **Gain Rider**, a **True Peak Limiter**, and **ITU-R BS.1770-5 compliant analytics** into a streamlined, intuitive interface.
+Loudness Leveler is a desktop application designed to help with vocal volume consistency. Built with podcasts and voiceovers in mind, it combines a **Gain Rider**, a **True Peak Limiter**, and **LUFS analytics** into a simple interface.
 
-<img width="1604" height="925" alt="screenshot" src="https://github.com/user-attachments/assets/0fc58e8d-ae84-49d4-b1c0-f42f31b21827" />
-
+<img width="1604" height="925" alt="screenshot" src="https://github.com/user-attachments/assets/60731a46-7d20-4690-b2e6-c780b3774bbc" />
 
 ---
 
 ## Key Features
 
-* **Intelligent Gain Riding**: Automatically maintains a target loudness level while preserving natural performance dynamics.
-* **Precision Meters**: Real-time ITU-R BS.1770-5 LUFS (Integrated/Short-term) and True Peak (TP) monitoring.
-* **Stereo Waveform Visualization**: Dual-channel traces with interactive mouse-tracking crosshairs and real-time dB/time readouts.
-* **Transparent DSP**: High-quality filters, noise gate, and compressor with zero-artifact one-pole smoothing.
-* **Professional Workflow**: Drag-and-drop file loading, system menubar for settings management, and high-fidelity 32-bit float export.
+* **Gain Riding**: Maintains a target loudness level to even out volume differences in spoken word audio.
+* **Monitoring**: Real-time LUFS (Integrated/Short-term) and True Peak (TP) meters.
+* **Waveform Visualization**: Dual-channel traces with mouse-tracking crosshairs and dB/time readouts.
+* **Audio Processing**: Includes filters, a noise gate, and a compressor with parameter smoothing.
+* **File Handling**: Drag-and-drop file loading and 32-bit float WAV export.
 
 ---
 
@@ -23,22 +22,22 @@ Loudness Leveler is a high-performance desktop application designed for creators
 
 Loudness Leveler operates as a sequential DSP chain: **Filters → Noise Gate → Gain Rider → Compressor → Manual Gain → Limiter**.
 
-### Gain Rider (The Core Engine)
-The Gain Rider actively "rides" the volume, boosting quiet sections and taming loud ones.
+### Gain Rider
+The Gain Rider actively adjusts the volume, boosting quiet sections and taming loud ones.
 
 | Control | Description |
 | :--- | :--- |
 | **Target** | The desired output loudness level in LUFS. |
 | **Range** | The maximum allowed gain boost or reduction (e.g., ±6dB). |
 | **Sensitivity** | Adjusts how quickly the rider reacts to speech vs. background noise. |
-| **Invert Effect** | Reverses the gain logic (useful for creative sound design). |
+| **Invert Effect** | Reverses the gain logic. |
 | **Attack*** | Speed of gain increases when signal drops below target. |
 | **Release*** | Speed of gain decreases when signal exceeds target. |
-| **Lookahead*** | Analysis window to anticipate volume changes (prevents overshoots). |
+| **Lookahead*** | Analysis window to anticipate volume changes. |
 | **Window*** | The time duration for each loudness calculation step. |
 
 ### Noise Gate
-Eliminates background noise, breaths, and hum during silent passages.
+Attenuates background noise, breaths, and hum during silent passages.
 
 | Control | Description |
 | :--- | :--- |
@@ -49,7 +48,7 @@ Eliminates background noise, breaths, and hum during silent passages.
 | **Release*** | How smoothly the gate closes at the end of a phrase. |
 
 ### Compressor
-Adds "punch" and consistency to the leveled vocal.
+Applies standard audio compression to the leveled vocal.
 
 | Control | Description |
 | :--- | :--- |
@@ -60,7 +59,7 @@ Adds "punch" and consistency to the leveled vocal.
 | **Threshold*** | The internal threshold used at maximum 'Amount'. |
 
 ### Limiter & Output
-The final safety stage to prevent digital clipping and ensure 0dBFS compliance.
+A peak limiter to prevent digital clipping at the output stage.
 
 | Control | Description |
 | :--- | :--- |
@@ -69,16 +68,16 @@ The final safety stage to prevent digital clipping and ensure 0dBFS compliance.
 | **Lookahead*** | Buffer size used to catch fast transients before they hit the ceiling. |
 
 ### EQ & Filters
-Pre-processing filters to clean up the signal before it hits the gain stages.
+Basic filtering applied before the signal reaches the gain stages.
 
 * **Low Cut 80Hz**: Removes low-end rumble and "P-pops" (High-pass).
 * **Mid Cut 1kHz**: Reduces "boxy" or "nasal" vocal frequencies (Peaking EQ).
-* **High Cut 20kHz**: Filters out ultrasonic hiss or digital noise (Low-pass).
-* **Phase Rotate**: 90° Phase rotation (Hilbert transform) to improve vocal symmetry.
+* **High Cut 20kHz**: Filters out high-frequency noise (Low-pass).
+* **Phase Rotate**: 90° Phase rotation (Hilbert transform) to alter vocal waveform symmetry.
 
 ---
 
-## Visual Monitoring
+## Visualization
 
 ### **Waveform Widget**
 * **Dual Traces**: Displays separate waveforms for Left and Right channels in stereo files.
@@ -89,16 +88,16 @@ Pre-processing filters to clean up the signal before it hits the gain stages.
 ### **Loudness Analysis**
 The bottom status area provides real-time updates:
 * **Integrated LUFS**: Average loudness of the entire file.
-* **True Peak (TP)**: Detected using **4x oversampling** to ensure inter-sample accuracy.
+* **True Peak (TP)**: Detected using **4x oversampling**.
 
 ---
 
-## Technical Highlights
-* **Language**: Modern **C++17/20** for high-performance DSP.
-* **DSP Architecture**: Lock-free real-time processing with atomic synchronization.
-* **GUI Framework**: **wxWidgets 3.2+** for a native, responsive desktop experience.
-* **Engine**: **FFmpeg** integration for robust decoding of MP3, WAV, M4A, and more.
-* **Smoothing**: Every parameter change is filtered to prevent clicks or "zipper" noise.
+## Technical Details
+* **Language**: **C++17/20**.
+* **Audio Threading**: Lock-free real-time processing with atomic synchronization.
+* **GUI Framework**: **wxWidgets 3.2+** for the desktop UI.
+* **Media Handling**: **FFmpeg** integration for decoding formats like MP3, WAV, and M4A.
+* **Smoothing**: Parameter changes are filtered to reduce audio clicks.
 
 ---
 
@@ -136,11 +135,11 @@ chmod +x build-mac.sh
 ## Usage Tip
 1. **Load**: Use `File > Load Audio` or drag a file directly into the window.
 2. **Configure**: Enable **Effects Active** to hear the processing.
-3. **Refine**: Set **Target LUFS** first, then adjust **Compressor Amount** for thickness.
-4. **Export**: Use `File > Export Audio` to render the processed file as a high-fidelity WAV.
+3. **Refine**: Set **Target LUFS** first, then adjust **Compressor Amount**.
+4. **Export**: Use `File > Export Audio` to render the processed file as a WAV.
 
 *\*Controls marked with an asterisk (\*) are available in **Advanced Mode** (Settings > Show Advanced Options).*
 
 ---
 
-*Loudness Leveler is open-source and designed for professional audio engineers and podcasters alike.*
+*Loudness Leveler is an open-source side project for processing spoken-word audio.*
