@@ -6,6 +6,7 @@
 #include <wx/dcbuffer.h>
 #include "config.h"
 #include "configAdvanced.h"
+#include <memory>
 
 namespace {
     const float HILBERT_A[6] = { 0.045053f, 0.222306f, 0.528346f, 0.825227f, 0.963175f, 0.995960f };

@@ -9,7 +9,9 @@
 #include <wx/stdpaths.h>
 #include <wx/filename.h>
 #include <wx/aboutdlg.h>
+#include <wx/mstream.h>
 #include "version.h"
+#include "icon_png.h"
 
 class FileDropTarget : public wxFileDropTarget {
 public:
@@ -52,6 +54,15 @@ MainWindow::MainWindow()
       m_gainRiderWindow(Config::GainRider::AnalysisWindowMs),
       m_gainRiderSlew(Config::GainRider::SlewRate)
 {
+    wxInitAllImageHandlers();
+    wxMemoryInputStream istream(icon_png, icon_png_len);
+    wxImage image(istream, wxBITMAP_TYPE_PNG);
+    if (image.IsOk()) {
+        wxIcon icon;
+        icon.CopyFromBitmap(wxBitmap(image));
+        SetIcon(icon);
+    }
+
     loadConfigFromIni();
     setupUi();
     syncAdvancedModeUI();
