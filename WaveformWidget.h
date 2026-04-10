@@ -158,9 +158,12 @@ private:
     AllPass1st m_hilbertB[2][6];
     Biquad m_lcL, m_lcR, m_hcL, m_hcR, m_mcL, m_mcR;
     
+    void renderToBitmap();
+    
     std::vector<float> m_cachedMinPeaks[2];
     std::vector<float> m_cachedMaxPeaks[2];
 
+    wxBitmap m_waveformBitmap;
     wxPoint m_mousePos;
     bool m_mouseInside = false;
 };

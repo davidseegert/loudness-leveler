@@ -1470,6 +1470,10 @@ void MainWindow::syncStageVisibility() {
     }
     
     Layout();
+    
+    // Force a size event to ensure Linux (wxGTK) re-evaluates the layout 
+    // especially after changing visibility of static box sizer children
+    PostSizeEvent();
 }
 
 void MainWindow::syncUiFromState() {

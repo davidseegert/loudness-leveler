@@ -13,12 +13,13 @@ namespace {
 }
 
 WaveformWidget::WaveformWidget(wxWindow* parent) 
-    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(-1, 150), wxBORDER_NONE)
+    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(-1, 150), wxBORDER_NONE | wxFULL_REPAINT_ON_RESIZE)
 {
     SetBackgroundStyle(wxBG_STYLE_PAINT);
     
     Bind(wxEVT_PAINT, &WaveformWidget::OnPaint, this);
     Bind(wxEVT_SIZE, &WaveformWidget::OnSize, this);
+    Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) {}); // Prevent flickering on Windows
     Bind(wxEVT_LEFT_DOWN, &WaveformWidget::OnMouseLeftDown, this);
     Bind(wxEVT_MOTION, &WaveformWidget::OnMouseMove, this);
     Bind(wxEVT_ENTER_WINDOW, &WaveformWidget::OnMouseEnter, this);
@@ -485,6 +486,8 @@ void WaveformWidget::updateCache() {
 
         m_cachedGains[x] = pixelGainSolo;
     }
+    
+    renderToBitmap();
 }
 
 void WaveformWidget::OnSize(wxSizeEvent& event) {
@@ -494,150 +497,29 @@ void WaveformWidget::OnSize(wxSizeEvent& event) {
 }
 
 void WaveformWidget::OnPaint(wxPaintEvent& WXUNUSED(event)) {
-    wxAutoBufferedPaintDC dc(this);
-    wxSize sz = GetClientSize();
-    int fullW = sz.GetWidth();
-    int fullH = sz.GetHeight();
+    wxBufferedPaintDC dc(this);
 
-    if (fullW <= 0 || fullH <= 0) return;
-
-    int rulerH = ConfigAdvanced::Visualization::TimeRulerHeight;
-    int scaleW = ConfigAdvanced::Visualization::DbScaleWidth;
-
-    int w = fullW - scaleW;
-    int h = fullH - rulerH;
-
-    // Background
-    dc.SetBackground(wxBrush(wxColour(30, 30, 30)));
-    dc.Clear();
-
-    if (!m_pcmData || m_pcmData->empty() || w <= 0 || h <= 0) {
-        dc.SetTextForeground(*wxWHITE);
-        wxString msg = "No Audio Loaded";
-        wxSize textSz = dc.GetTextExtent(msg);
-        dc.DrawText(msg, (fullW - textSz.x) / 2, (fullH - textSz.y) / 2);
+    if (!m_waveformBitmap.IsOk()) {
+        dc.SetBackground(wxBrush(wxColour(30, 30, 30)));
+        dc.Clear();
         return;
     }
 
-    int midY = rulerH + (h / 2);
-    float amp = (static_cast<float>(h) / 2.0f) * 0.95f; 
+    dc.DrawBitmap(m_waveformBitmap, 0, 0);
+
+    wxSize sz = GetClientSize();
+    int fullW = sz.GetWidth();
+    int fullH = sz.GetHeight();
+    int rulerH = ConfigAdvanced::Visualization::TimeRulerHeight;
+    int scaleW = ConfigAdvanced::Visualization::DbScaleWidth;
+    int w = fullW - scaleW;
+    int h = fullH - rulerH;
+
+    if (!m_pcmData || m_pcmData->empty() || w <= 0 || h <= 0) return;
+
     float viewDuration = m_duration / m_zoomLevel;
-
-    // Draw Time Ruler Background
-    dc.SetBrush(wxBrush(wxColour(45, 45, 45)));
-    dc.SetPen(*wxTRANSPARENT_PEN);
-    dc.DrawRectangle(0, 0, fullW, rulerH);
-    
-    // Draw Scale Background
-    dc.DrawRectangle(0, 0, scaleW, fullH);
-
-    dc.SetFont(wxFont(ConfigAdvanced::Visualization::RulerFontSize, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
-    dc.SetTextForeground(wxColour(180, 180, 180));
-
-    // 1. Draw Time Ruler (Top)
     float startTime = m_viewportOffset;
     float endTime = startTime + viewDuration;
-    
-    float interval = 1.0f;
-    if (viewDuration > 300) interval = 60.0f;
-    else if (viewDuration > 60) interval = 10.0f;
-    else if (viewDuration > 10) interval = 5.0f;
-    else if (viewDuration > 2) interval = 1.0f;
-    else if (viewDuration > 0.5) interval = 0.1f;
-    else interval = 0.05f;
-
-    float firstTick = std::floor(startTime / interval) * interval;
-    for (float t = firstTick; t <= endTime; t += interval) {
-        if (t < startTime) continue;
-        int x = scaleW + static_cast<int>((t - startTime) / viewDuration * w);
-        
-        dc.SetPen(wxPen(wxColour(100, 100, 100)));
-        dc.DrawLine(x, rulerH - 8, x, rulerH);
-        
-        int mins = static_cast<int>(t) / 60;
-        int secs = static_cast<int>(t) % 60;
-        int fms = static_cast<int>((t - std::floor(t)) * 100);
-        
-        wxString timeStr = (interval >= 1.0f) ? wxString::Format("%d:%02d", mins, secs) : wxString::Format("%d:%02d.%0d", mins, secs, fms/10);
-        wxSize szT = dc.GetTextExtent(timeStr);
-        dc.DrawText(timeStr, x - szT.GetWidth() / 2, 2);
-    }
-
-    // 2. Draw dB Scale & Waveforms
-    std::vector<float> dbMarkers = {0.0f, -1.0f, -3.0f, -6.0f, -12.0f, -24.0f, -48.0f, -100.0f};
-    for (int c = 0; c < m_channels && c < 2; ++c) {
-        int chH = (m_channels == 1) ? h : h / 2;
-        int chMidY = rulerH + (c * chH) + (chH / 2);
-        float chAmp = (static_cast<float>(chH) / 2.0f) * 0.95f;
-
-        // Draw dB Scale for this channel
-        dc.SetFont(wxFont(ConfigAdvanced::Visualization::RulerFontSize, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
-        dc.SetTextForeground(wxColour(180, 180, 180));
-        
-        int lastY_pos = chMidY + 1000;
-        for (float db : dbMarkers) {
-            float linear = std::pow(10.0f, db / 20.0f);
-            int y_pos = chMidY - static_cast<int>(linear * chAmp);
-            int y_neg = chMidY + static_cast<int>(linear * chAmp);
-
-            bool showLabel = (db == 0.0f || std::abs(y_pos - lastY_pos) > 12);
-            dc.SetPen(wxPen(wxColour(60, 60, 60, 100), 1, wxPENSTYLE_DOT));
-            dc.DrawLine(scaleW, y_pos, fullW, y_pos);
-            if (db < -0.01f) dc.DrawLine(scaleW, y_neg, fullW, y_neg);
-
-            if (showLabel) {
-                wxString label = (db == 0.0f) ? "0dB" : ((db <= -99.0f) ? "-inf" : wxString::Format("%.0f", db));
-                wxSize szL = dc.GetTextExtent(label);
-                dc.DrawText(label, scaleW - szL.GetWidth() - 5, y_pos - szL.GetHeight() / 2);
-                if (db < -0.1f) dc.DrawText(label, scaleW - szL.GetWidth() - 5, y_neg - szL.GetHeight() / 2);
-                lastY_pos = y_pos;
-            }
-        }
-
-        // Draw Waveform for this channel
-        if (m_cachedMaxPeaks[c].size() == static_cast<size_t>(w)) {
-            dc.SetPen(wxPen(wxColour(99, 102, 241)));
-            for (int x = 0; x < w; ++x) {
-                float minVal = m_cachedMinPeaks[c][x];
-                float maxVal = m_cachedMaxPeaks[c][x];
-                
-                // Vertical Clamping to Channel Bounds (matching 0dB scale)
-                int y1 = chMidY + std::clamp(static_cast<int>(minVal * chAmp), -static_cast<int>(chAmp), static_cast<int>(chAmp));
-                int y2 = chMidY + std::clamp(static_cast<int>(maxVal * chAmp), -static_cast<int>(chAmp), static_cast<int>(chAmp));
-                
-                dc.DrawLine(scaleW + x, y1, scaleW + x, y2);
-            }
-        }
-        
-        // Channel Label (L / R)
-        if (m_channels > 1) {
-            dc.SetTextForeground(wxColour(150, 150, 150));
-            dc.DrawText(c == 0 ? "L" : "R", scaleW + 5, rulerH + (c * chH) + 2);
-        }
-
-        // Draw Gain Trace for this channel
-        if (!m_cachedGains.empty()) {
-            dc.SetPen(wxPen(wxColour(255, 235, 59, 180), 2));
-            std::vector<wxPoint> gainPoints;
-            for (int x = 0; x < w; ++x) {
-                float gain = m_cachedGains[x];
-                float gainDb = 20.0f * std::log10(gain + 1e-6f);
-                
-                // Mapping: -24dB at centerish, 0dB at the top edge (chMidY - chAmp)
-                // Using 24dB as the reference for "visual 1.0" for the trace
-                int y = chMidY - static_cast<int>((gainDb / 24.0f) * chAmp);
-                
-                // Strict clamping to prevent bleed into Ruler or next channel
-                y = std::clamp(y, rulerH + (c * chH), rulerH + (c + 1) * chH - 1);
-                
-                gainPoints.push_back(wxPoint(scaleW + x, y));
-            }
-            if (gainPoints.size() > 1) {
-                dc.DrawLines(gainPoints.size(), gainPoints.data());
-            }
-        }
-    }
-
 
     // 4. Playhead
     if (m_playheadTime >= startTime && m_playheadTime <= endTime) {
@@ -660,8 +542,6 @@ void WaveformWidget::OnPaint(wxPaintEvent& WXUNUSED(event)) {
         float mouseTime = m_viewportOffset + (static_cast<float>(m_mousePos.x - scaleW) / w) * viewDuration;
         mouseTime = std::clamp(mouseTime, 0.0f, m_duration);
         
-        // dB calculation based on which channel the mouse is in
-        float mouseDb = -100.0f;
         int mins = static_cast<int>(mouseTime) / 60;
         int secs = static_cast<int>(mouseTime) % 60;
         int ms = static_cast<int>((mouseTime - std::floor(mouseTime)) * 1000);
@@ -673,11 +553,10 @@ void WaveformWidget::OnPaint(wxPaintEvent& WXUNUSED(event)) {
         
         float dy = static_cast<float>(chMidY - m_mousePos.y);
         float linear = dy / (chAmp + 1e-6f);
-        mouseDb = 20.0f * std::log10(std::abs(linear) + 1e-9f);
+        float mouseDb = 20.0f * std::log10(std::abs(linear) + 1e-9f);
         
         wxString timeStr = wxString::Format("%d:%02d.%03d", mins, secs, ms);
         wxString dbStr = (mouseDb < -99.0f) ? "-inf dB" : wxString::Format("%.2f dB", mouseDb);
-        
         wxString label = timeStr + "  " + dbStr;
         
         dc.SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
@@ -686,17 +565,166 @@ void WaveformWidget::OnPaint(wxPaintEvent& WXUNUSED(event)) {
         int labelX = m_mousePos.x + 5;
         int labelY = m_mousePos.y - labelSz.y - 5;
         
-        // Keep label inside widget area
         if (labelX + labelSz.x > fullW) labelX = m_mousePos.x - labelSz.x - 5;
         if (labelY < rulerH) labelY = m_mousePos.y + 5;
         
-        // Background for text
         dc.SetBrush(wxBrush(wxColour(0, 0, 0, 180)));
         dc.SetPen(*wxTRANSPARENT_PEN);
         dc.DrawRectangle(labelX - 2, labelY - 2, labelSz.x + 4, labelSz.y + 4);
         
         dc.SetTextForeground(*wxWHITE);
         dc.DrawText(label, labelX, labelY);
+    }
+}
+
+void WaveformWidget::renderToBitmap() {
+    wxSize sz = GetClientSize();
+    int fullW = sz.GetWidth();
+    int fullH = sz.GetHeight();
+
+    if (fullW <= 0 || fullH <= 0) return;
+
+    m_waveformBitmap = wxBitmap(fullW, fullH);
+    wxMemoryDC memDC(m_waveformBitmap);
+    
+    // Background
+    memDC.SetBackground(wxBrush(wxColour(30, 30, 30)));
+    memDC.Clear();
+
+    int rulerH = ConfigAdvanced::Visualization::TimeRulerHeight;
+    int scaleW = ConfigAdvanced::Visualization::DbScaleWidth;
+    int w = fullW - scaleW;
+    int h = fullH - rulerH;
+
+    if (!m_pcmData || m_pcmData->empty() || w <= 0 || h <= 0) {
+        memDC.SetTextForeground(*wxWHITE);
+        wxString msg = "No Audio Loaded";
+        wxSize textSz = memDC.GetTextExtent(msg);
+        memDC.DrawText(msg, (fullW - textSz.x) / 2, (fullH - textSz.y) / 2);
+        return;
+    }
+
+    // Draw Time Ruler Background
+    memDC.SetBrush(wxBrush(wxColour(45, 45, 45)));
+    memDC.SetPen(*wxTRANSPARENT_PEN);
+    memDC.DrawRectangle(0, 0, fullW, rulerH);
+    
+    // Draw Scale Background
+    memDC.DrawRectangle(0, 0, scaleW, fullH);
+
+    memDC.SetFont(wxFont(ConfigAdvanced::Visualization::RulerFontSize, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+    memDC.SetTextForeground(wxColour(180, 180, 180));
+
+    // 1. Draw Time Ruler (Top)
+    float startTime = m_viewportOffset;
+    float viewDuration = m_duration / m_zoomLevel;
+    float endTime = startTime + viewDuration;
+    
+    float interval = 1.0f;
+    if (viewDuration > 300) interval = 60.0f;
+    else if (viewDuration > 60) interval = 10.0f;
+    else if (viewDuration > 10) interval = 5.0f;
+    else if (viewDuration > 2) interval = 1.0f;
+    else if (viewDuration > 0.5) interval = 0.1f;
+    else interval = 0.05f;
+
+    float firstTick = std::floor(startTime / interval) * interval;
+    for (float t = firstTick; t <= endTime; t += interval) {
+        if (t < startTime) continue;
+        int x = scaleW + static_cast<int>((t - startTime) / viewDuration * w);
+        
+        memDC.SetPen(wxPen(wxColour(100, 100, 100)));
+        memDC.DrawLine(x, rulerH - 8, x, rulerH);
+        
+        int mins = static_cast<int>(t) / 60;
+        int secs = static_cast<int>(t) % 60;
+        int fms = static_cast<int>((t - std::floor(t)) * 100);
+        
+        wxString timeStr = (interval >= 1.0f) ? wxString::Format("%d:%02d", mins, secs) : wxString::Format("%d:%02d.%0d", mins, secs, fms/10);
+        wxSize szT = memDC.GetTextExtent(timeStr);
+        memDC.DrawText(timeStr, x - szT.GetWidth() / 2, 2);
+    }
+
+    // Use wxGraphicsContext for the waveform and trace (smoother!)
+    std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(memDC));
+    if (!gc) return;
+
+    // 2. Draw dB Scale & Waveforms
+    std::vector<float> dbMarkers = {0.0f, -1.0f, -3.0f, -6.0f, -12.0f, -24.0f, -48.0f, -100.0f};
+    for (int c = 0; c < m_channels && c < 2; ++c) {
+        int chH = (m_channels == 1) ? h : h / 2;
+        int chMidY = rulerH + (c * chH) + (chH / 2);
+        float chAmp = (static_cast<float>(chH) / 2.0f) * 0.95f;
+
+        // Draw dB Scale for this channel
+        memDC.SetFont(wxFont(ConfigAdvanced::Visualization::RulerFontSize, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+        memDC.SetTextForeground(wxColour(180, 180, 180));
+        
+        int lastY_pos = chMidY + 1000;
+        for (float db : dbMarkers) {
+            float linear = std::pow(10.0f, db / 20.0f);
+            int y_pos = chMidY - static_cast<int>(linear * chAmp);
+            int y_neg = chMidY + static_cast<int>(linear * chAmp);
+
+            bool showLabel = (db == 0.0f || std::abs(y_pos - lastY_pos) > 12);
+            memDC.SetPen(wxPen(wxColour(60, 60, 60, 100), 1, wxPENSTYLE_DOT));
+            memDC.DrawLine(scaleW, y_pos, fullW, y_pos);
+            if (db < -0.01f) memDC.DrawLine(scaleW, y_neg, fullW, y_neg);
+
+            if (showLabel) {
+                wxString label = (db == 0.0f) ? "0dB" : ((db <= -99.0f) ? "-inf" : wxString::Format("%.0f", db));
+                wxSize szL = memDC.GetTextExtent(label);
+                memDC.DrawText(label, scaleW - szL.GetWidth() - 5, y_pos - szL.GetHeight() / 2);
+                if (db < -0.1f) memDC.DrawText(label, scaleW - szL.GetWidth() - 5, y_neg - szL.GetHeight() / 2);
+                lastY_pos = y_pos;
+            }
+        }
+
+        // Draw Waveform for this channel
+        if (m_cachedMaxPeaks[c].size() == static_cast<size_t>(w)) {
+            gc->SetPen(wxPen(wxColour(99, 102, 241)));
+            gc->SetBrush(wxBrush(wxColour(99, 102, 241, 180)));
+            
+            wxGraphicsPath path = gc->CreatePath();
+            bool first = true;
+            for (int x = 0; x < w; ++x) {
+                float maxVal = m_cachedMaxPeaks[c][x];
+                float y = chMidY + std::clamp(static_cast<float>(maxVal * chAmp), -chAmp, chAmp);
+                if (first) { path.MoveToPoint(scaleW + x, y); first = false; }
+                else path.AddLineToPoint(scaleW + x, y);
+            }
+            for (int x = w - 1; x >= 0; --x) {
+                float minVal = m_cachedMinPeaks[c][x];
+                float y = chMidY + std::clamp(static_cast<float>(minVal * chAmp), -chAmp, chAmp);
+                path.AddLineToPoint(scaleW + x, y);
+            }
+            path.CloseSubpath();
+            gc->DrawPath(path);
+        }
+        
+        // Channel Label (L / R)
+        if (m_channels > 1) {
+            memDC.SetTextForeground(wxColour(150, 150, 150));
+            memDC.DrawText(c == 0 ? "L" : "R", scaleW + 5, rulerH + (c * chH) + 2);
+        }
+
+        // Draw Gain Trace for this channel
+        if (!m_cachedGains.empty()) {
+            gc->SetPen(wxPen(wxColour(255, 235, 59, 200), 2));
+            wxGraphicsPath gPath = gc->CreatePath();
+            bool gFirst = true;
+
+            for (int x = 0; x < w; ++x) {
+                float gain = m_cachedGains[x];
+                float gainDb = 20.0f * std::log10(gain + 1e-6f);
+                float y = chMidY - (gainDb / 24.0f) * chAmp;
+                y = std::clamp(y, (float)(rulerH + (c * chH)), (float)(rulerH + (c + 1) * chH - 1));
+                
+                if (gFirst) { gPath.MoveToPoint(scaleW + x, y); gFirst = false; }
+                else gPath.AddLineToPoint(scaleW + x, y);
+            }
+            gc->StrokePath(gPath);
+        }
     }
 }
 
