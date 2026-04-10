@@ -131,6 +131,14 @@ codesign --force --deep -s - "$APP_BUNDLE"
 
 echo "Build successful! Portable bundle created at: $APP_NAME.app"
 
+# --- Packaging ---
+echo "Creating zip archive..."
+ZIP_NAME="${APP_NAME}-mac.zip"
+# Remove old zip if it exists to be safe
+rm -f "$ZIP_NAME"
+zip -r "$ZIP_NAME" "$APP_BUNDLE" > /dev/null
+echo "Archive created at: build/$ZIP_NAME"
+
 # If build is successful, run the executable from the bundle
 echo "Starting loudness-leveler from bundle..."
 "$MACOS/$APP_NAME"
