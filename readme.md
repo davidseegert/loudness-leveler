@@ -4,9 +4,9 @@
 
 Loudness Leveler is a desktop application designed to help with vocal volume consistency. Built with podcasts and voiceovers in mind, it combines a **Gain Rider**, a **True Peak Limiter**, and **LUFS analytics** into a simple interface.
 
-<img width="1604" height="925" alt="screenshot" src="https://github.com/user-attachments/assets/60731a46-7d20-4690-b2e6-c780b3774bbc" />
+**[Download](https://github.com/davidseegert/loudness-leveler/releases/)**
 
----
+<img width="1604" height="925" alt="screenshot" src="https://github.com/user-attachments/assets/60731a46-7d20-4690-b2e6-c780b3774bbc" />
 
 ## Key Features
 
@@ -16,11 +16,12 @@ Loudness Leveler is a desktop application designed to help with vocal volume con
 * **Audio Processing**: Includes filters, a noise gate, and a compressor with parameter smoothing.
 * **File Handling**: Drag-and-drop file loading and 32-bit float WAV export.
 
----
 
 ## Detailed Settings & Controls
 
 Loudness Leveler operates as a sequential DSP chain: **Filters → Noise Gate → Gain Rider → Compressor → Manual Gain → Limiter**.
+
+Controls marked with an asterisk (\*) are available in **Advanced Mode** (Settings > Show Advanced Options).
 
 ### Gain Rider
 The Gain Rider actively adjusts the volume, boosting quiet sections and taming loud ones.
@@ -75,8 +76,6 @@ Basic filtering applied before the signal reaches the gain stages.
 * **High Cut 20kHz**: Filters out high-frequency noise (Low-pass).
 * **Phase Rotate**: 90° Phase rotation (Hilbert transform) to alter vocal waveform symmetry.
 
----
-
 ## Visualization
 
 ### **Waveform Widget**
@@ -90,16 +89,12 @@ The bottom status area provides real-time updates:
 * **Integrated LUFS**: Average loudness of the entire file.
 * **True Peak (TP)**: Detected using **4x oversampling**.
 
----
-
 ## Technical Details
 * **Language**: **C++17/20**.
 * **Audio Threading**: Lock-free real-time processing with atomic synchronization.
 * **GUI Framework**: **wxWidgets 3.2+** for the desktop UI.
 * **Media Handling**: **FFmpeg** integration for decoding formats like MP3, WAV, and M4A.
 * **Smoothing**: Parameter changes are filtered to reduce audio clicks.
-
----
 
 ## Build & Requirements
 
@@ -130,16 +125,11 @@ chmod +x build-mac.sh
 ./build-mac.sh
 ```
 
----
-
 ## Usage Tip
 1. **Load**: Use `File > Load Audio` or drag a file directly into the window.
 2. **Configure**: Enable **Effects Active** to hear the processing.
 3. **Refine**: Set **Target LUFS** first, then adjust **Compressor Amount**.
 4. **Export**: Use `File > Export Audio` to render the processed file as a WAV.
 
-*\*Controls marked with an asterisk (\*) are available in **Advanced Mode** (Settings > Show Advanced Options).*
-
----
 
 *Loudness Leveler is an open-source side project for processing spoken-word audio.*
