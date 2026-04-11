@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 :: build-win.bat - Build and run the Loudness Leveler project on Windows
 
 :: Kill existing instance to prevent file locking
-taskkill /F /IM loudness-leveler.exe 2>nul
+taskkill /F /IM "Loudness Leveler.exe" 2>nul
 
 if not exist build (
     mkdir build
@@ -39,10 +39,10 @@ if !ERRORLEVEL! neq 0 (
 
 :: If build is successful, package and run the executable
 echo Build successful! Packaging executable and DLLs...
-if exist Release\loudness-leveler.exe (
-    powershell -Command "Compress-Archive -Path 'Release\loudness-leveler.exe', 'Release\*.dll' -DestinationPath 'loudness-leveler-win64.zip' -Force"
-    echo Packaging complete. Created build\loudness-leveler-win64.zip.
-    start Release\loudness-leveler.exe
+if exist "Release\Loudness Leveler.exe" (
+    powershell -Command "Compress-Archive -Path 'Release\Loudness Leveler.exe', 'Release\*.dll' -DestinationPath 'Loudness Leveler-win64.zip' -Force"
+    echo Packaging complete. Created build\Loudness Leveler-win64.zip.
+    start "" "Release\Loudness Leveler.exe"
 ) else (
     echo Executable not found in Release folder.
     exit /b 1

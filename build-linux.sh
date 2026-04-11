@@ -31,7 +31,7 @@ cd ..
 
 # 3. Prepare distribution folder
 echo "Preparing distribution package..."
-APP_NAME="loudness-leveler"
+APP_NAME="Loudness Leveler"
 DIST_DIR="${APP_NAME}-linux"
 rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR/libs"

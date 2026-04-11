@@ -25,7 +25,7 @@ echo "Building project..."
 make -j$(sysctl -n hw.logicalcpu)
 
 # --- App Bundle Creation ---
-APP_NAME="loudness-leveler"
+APP_NAME="Loudness Leveler"
 APP_BUNDLE="$APP_NAME.app"
 CONTENTS="$APP_BUNDLE/Contents"
 MACOS="$CONTENTS/MacOS"
@@ -140,5 +140,5 @@ zip -r "$ZIP_NAME" "$APP_BUNDLE" > /dev/null
 echo "Archive created at: build/$ZIP_NAME"
 
 # If build is successful, run the executable from the bundle
-echo "Starting loudness-leveler from bundle..."
+echo "Starting $APP_NAME from bundle..."
 "$MACOS/$APP_NAME"

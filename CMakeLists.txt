@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(loudness-leveler VERSION 0.0.2 LANGUAGES CXX)
+project("Loudness Leveler" VERSION 0.0.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,6 +40,7 @@ if(WIN32)
 endif()
 
 add_executable(loudness-leveler WIN32 ${SOURCES})
+set_target_properties(loudness-leveler PROPERTIES OUTPUT_NAME "Loudness Leveler")
 
 target_link_libraries(loudness-leveler PRIVATE ${wxWidgets_LIBRARIES})
 
